@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection: public create, authenticated read/update
+    match /users/{userId} {
+      // Anyone can create a user document (for signup)
+      allow create: if true;
+      
+      // Only authenticated users can read their own document
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Only authenticated users can update their own document
+      allow update: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Flights collection: authenticated users only
+    match /flights/{flightId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+  }
+}

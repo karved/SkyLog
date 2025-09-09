@@ -1,0 +1,60 @@
+{
+  "name": "skylog",
+  "version": "1.0.0",
+  "description": "A modern flight tracking web application built with Angular and Firebase",
+  "keywords": [
+    "angular",
+    "firebase",
+    "flight-tracking",
+    "typescript",
+    "tailwindcss"
+  ],
+  "author": "SkyLog Team",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --port 3000 --host localhost",
+    "start:prod": "ng serve --configuration production --port 80 --host localhost",
+    "build": "ng build",
+    "build:prod": "ng build --configuration production",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "serve:ssr": "node dist/skylog/server/server.mjs",
+    "deploy": "cross-env NODE_NO_WARNINGS=1 firebase deploy",
+    "deploy:hosting": "cross-env NODE_NO_WARNINGS=1 firebase deploy --only hosting",
+    "deploy:firestore": "cross-env NODE_NO_WARNINGS=1 firebase deploy --only firestore"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^17.0.0",
+    "@angular/common": "^17.0.0",
+    "@angular/compiler": "^17.0.0",
+    "@angular/core": "^17.0.0",
+    "@angular/fire": "^17.0.0",
+    "@angular/forms": "^17.0.0",
+    "@angular/platform-browser": "^17.0.0",
+    "@angular/platform-browser-dynamic": "^17.0.0",
+    "@angular/router": "^17.0.0",
+    "firebase": "^10.7.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.0.0",
+    "@angular/cli": "^17.0.0",
+    "@angular/compiler-cli": "^17.0.0",
+    "@types/jasmine": "~5.1.0",
+    "@types/node": "^24.3.1",
+    "autoprefixer": "^10.4.0",
+    "cross-env": "^10.0.0",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.3.0",
+    "typescript": "~5.2.0"
+  }
+}
