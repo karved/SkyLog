@@ -83,7 +83,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       (focus)="onFromInputFocus()"
                       (blur)="onFromInputBlur()"
                       required
-                      [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isFromAirportValid ? 'border-gray-200' : 'border-red-300 bg-red-50')"
+                      [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isFromAirportEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., LAX - Los Angeles"
                     >
                     <button
@@ -135,7 +135,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       (focus)="onToInputFocus()"
                       (blur)="onToInputBlur()"
                       required
-                      [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isToAirportValid ? 'border-gray-200' : 'border-red-300 bg-red-50')"
+                      [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isToAirportEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., JFK - New York"
                     >
                     <button
@@ -199,7 +199,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       (focus)="onAirlineInputFocus()"
                       (blur)="onAirlineInputBlur()"
                       required
-                      [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isAirlineValid ? 'border-gray-200' : 'border-red-300 bg-red-50')"
+                      [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isAirlineEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., American Airlines"
                     >
                     <button
@@ -247,6 +247,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       [required]="true"
                       [minDate]="minDate"
                       [maxDate]="maxDate"
+                      [customClasses]="isFlightDateEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-300'"
                       ariaLabel="Select flight date"
                       errorMessage="Please select a valid flight date"
                       name="flightDate"
@@ -270,6 +271,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                     [required]="isRoundtrip"
                     [minDate]="minReturnDate"
                     [maxDate]="maxDate"
+                    [customClasses]="isReturnDateEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-300'"
                     ariaLabel="Select return date"
                     errorMessage="Please select a valid return date"
                     name="returnDate"
@@ -309,8 +311,9 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       id="flightNumber"
                       name="flightNumber"
                       [(ngModel)]="apiData.flightNumber"
+                      (input)="validateFlightNumber()"
                       required
-                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat"
+                      [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isFlightNumberEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., AA123"
                     >
                   </div>
@@ -325,7 +328,9 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                     <div class="relative">
                       <app-custom-time-picker
                         [(ngModel)]="arrivalTime"
+                        (ngModelChange)="validateArrivalTime()"
                         [required]="true"
+                        [customClasses]="isArrivalTimeEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-300'"
                         ariaLabel="Select arrival time"
                         errorMessage="Please select a valid arrival time"
                         name="arrivalTime"
@@ -348,9 +353,10 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                         id="numOfGuests"
                         name="numOfGuests"
                         [(ngModel)]="apiData.numOfGuests"
+                        (input)="validateNumOfGuests()"
                         required
                         min="1"
-                        class="w-full pl-4 pr-12 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        [class]="'w-full pl-4 pr-12 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ' + (isNumOfGuestsEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                         placeholder="1"
                       >
                       <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex flex-col space-y-1">
@@ -380,8 +386,9 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       id="candidateName"
                       name="candidateName"
                       [(ngModel)]="candidateName"
+                      (input)="validateCandidateName()"
                       required
-                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat"
+                      [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isCandidateNameEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="Your full name"
                     >
                   </div>
@@ -398,6 +405,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                     id="comments"
                     name="comments"
                     [(ngModel)]="apiData.comments"
+                    (input)="validateComments()"
                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat resize-none"
                     rows="2"
                     placeholder="Additional comments about your flight..."
@@ -427,8 +435,9 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       id="returnFlightNumber"
                       name="returnFlightNumber"
                       [(ngModel)]="returnApiData.flightNumber"
+                      (input)="validateReturnFlightNumber()"
                       required
-                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat"
+                      [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat ' + (isReturnFlightNumberEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., AA456"
                     >
                   </div>
@@ -443,7 +452,9 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                     <div class="relative">
                       <app-custom-time-picker
                         [(ngModel)]="returnArrivalTime"
+                        (ngModelChange)="validateReturnArrivalTime()"
                         [required]="isRoundtrip"
+                        [customClasses]="isReturnArrivalTimeEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-300'"
                         ariaLabel="Select return arrival time"
                         errorMessage="Please select a valid return arrival time"
                         name="returnArrivalTime"
@@ -463,6 +474,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                     id="returnComments"
                     name="returnComments"
                     [(ngModel)]="returnApiData.comments"
+                    (input)="validateReturnComments()"
                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat resize-none"
                     rows="2"
                     placeholder="Additional comments about your return flight..."
@@ -472,7 +484,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
 
               <button
                 type="submit"
-                [disabled]="!flightForm.form.valid || isSubmitting || !isFromAirportValid || !isToAirportValid || !isAirlineValid || !isReturnDateValid"
+                [disabled]="!isFormValid() || isSubmitting"
                 class="btn-primary w-full"
               >
                 <span *ngIf="isSubmitting" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
@@ -657,9 +669,33 @@ export class DashboardComponent implements OnInit {
   isToAirportValid = true;
   isAirlineValid = true;
   isReturnDateValid = true;
+  isFlightNumberValid = true;
+  isArrivalTimeValid = true;
+  isReturnFlightNumberValid = true;
+  isReturnArrivalTimeValid = true;
+  isCandidateNameValid = true;
+  isNumOfGuestsValid = true;
+  isCommentsValid = true;
+  isReturnCommentsValid = true;
+
+  // Styling flags - for red borders when empty
+  isFromAirportEmpty = false;
+  isToAirportEmpty = false;
+  isAirlineEmpty = false;
+  isFlightNumberEmpty = false;
+  isArrivalTimeEmpty = false;
+  isNumOfGuestsEmpty = false;
+  isCandidateNameEmpty = false;
+  isReturnFlightNumberEmpty = false;
+  isReturnArrivalTimeEmpty = false;
+  isFlightDateEmpty = false;
+  isReturnDateEmpty = false;
 
   // Form reset flag
   isResettingForm = false;
+  
+  // Track if user has attempted to submit
+  hasAttemptedSubmit = false;
 
   flightDateString = '';
   returnDateValidationError = '';
@@ -696,10 +732,14 @@ export class DashboardComponent implements OnInit {
     this.flightService.flights$.subscribe(flights => {
       this.flights = flights;
     });
+
+    // Initialize validation
+    this.validateAllFields();
   }
 
   async submitFlight() {
     this.isSubmitting = true;
+    this.hasAttemptedSubmit = true; // Mark that user has attempted to submit
     this.successMessage = '';
     this.errorMessage = '';
     this.airportValidationError = '';
@@ -854,6 +894,30 @@ export class DashboardComponent implements OnInit {
     this.isToAirportValid = true;
     this.isAirlineValid = true;
     this.isReturnDateValid = true;
+    this.isFlightNumberValid = true;
+    this.isArrivalTimeValid = true;
+    this.isReturnFlightNumberValid = true;
+    this.isReturnArrivalTimeValid = true;
+    this.isCandidateNameValid = true;
+    this.isNumOfGuestsValid = true;
+    this.isCommentsValid = true;
+    this.isReturnCommentsValid = true;
+    
+    // Reset empty flags
+    this.isFromAirportEmpty = false;
+    this.isToAirportEmpty = false;
+    this.isAirlineEmpty = false;
+    this.isFlightNumberEmpty = false;
+    this.isArrivalTimeEmpty = false;
+    this.isNumOfGuestsEmpty = false;
+    this.isCandidateNameEmpty = false;
+    this.isReturnFlightNumberEmpty = false;
+    this.isReturnArrivalTimeEmpty = false;
+    this.isFlightDateEmpty = false;
+    this.isReturnDateEmpty = false;
+    
+    // Reset submit attempt flag
+    this.hasAttemptedSubmit = false;
     
     // Clear dropdown selections
     this.clearFromAirport();
@@ -868,11 +932,13 @@ export class DashboardComponent implements OnInit {
 
   incrementGuests() {
     this.apiData.numOfGuests = (this.apiData.numOfGuests || 1) + 1;
+    this.validateNumOfGuests();
   }
 
   decrementGuests() {
     if (this.apiData.numOfGuests > 1) {
       this.apiData.numOfGuests = this.apiData.numOfGuests - 1;
+      this.validateNumOfGuests();
     }
   }
 
@@ -891,18 +957,31 @@ export class DashboardComponent implements OnInit {
   // Handle roundtrip toggle
   onRoundtripToggle() {
     if (this.isRoundtrip) {
-      // Copy departure data to return data
+      // Copy departure data to return data, including the number of guests
       this.returnApiData = {
         ...this.apiData,
         arrivalTime: '', // Reset arrival time for return
-        comments: '' // Reset comments for return
+        comments: '', // Reset comments for return
+        numOfGuests: this.apiData.numOfGuests // Copy the number of guests from departure
       };
+      // Set return date as empty when roundtrip is enabled
+      this.isReturnDateEmpty = true;
+      this.isReturnArrivalTimeEmpty = true;
+      this.isReturnFlightNumberEmpty = true;
       // Validate return date when roundtrip is enabled
       this.validateReturnDate();
+      // Validate return fields
+      this.validateReturnFlightNumber();
+      this.validateReturnArrivalTime();
     } else {
       // Clear return date validation when roundtrip is disabled
       this.isReturnDateValid = true;
       this.returnDateValidationError = '';
+      this.isReturnFlightNumberValid = true;
+      this.isReturnArrivalTimeValid = true;
+      this.isReturnDateEmpty = false;
+      this.isReturnArrivalTimeEmpty = false;
+      this.isReturnFlightNumberEmpty = false;
     }
   }
 
@@ -974,6 +1053,7 @@ export class DashboardComponent implements OnInit {
     this.filteredFromAirports = [];
     this.showFromDropdown = false;
     this.airportValidationError = ''; // Clear validation error
+    this.validateFromAirport(); // Validate after selection
     // Re-filter the arrival airports to exclude the selected departure
     this.filterToAirports();
   }
@@ -985,6 +1065,7 @@ export class DashboardComponent implements OnInit {
     this.filteredToAirports = [];
     this.showToDropdown = false;
     this.airportValidationError = ''; // Clear validation error
+    this.validateToAirport(); // Validate after selection
     // Re-filter the departure airports to exclude the selected arrival
     this.filterFromAirports();
   }
@@ -996,6 +1077,7 @@ export class DashboardComponent implements OnInit {
     this.airlineSearchTerm = airline.name;
     this.filteredAirlines = [];
     this.showAirlineDropdown = false;
+    this.validateAirline(); // Validate after selection
   }
 
   clearFromAirport() {
@@ -1004,6 +1086,8 @@ export class DashboardComponent implements OnInit {
     this.fromSearchTerm = '';
     this.filteredFromAirports = this.airports;
     this.showFromDropdown = false;
+    this.isFromAirportEmpty = true;
+    this.validateFromAirport(); // Validate after clearing
     // Re-filter the arrival airports since departure is cleared (without opening dropdown)
     this.filterToAirportsSilently();
   }
@@ -1014,6 +1098,8 @@ export class DashboardComponent implements OnInit {
     this.toSearchTerm = '';
     this.filteredToAirports = this.airports;
     this.showToDropdown = false;
+    this.isToAirportEmpty = true;
+    this.validateToAirport(); // Validate after clearing
     // Re-filter the departure airports since arrival is cleared (without opening dropdown)
     this.filterFromAirportsSilently();
   }
@@ -1025,6 +1111,8 @@ export class DashboardComponent implements OnInit {
     this.airlineSearchTerm = '';
     this.filteredAirlines = this.airlines;
     this.showAirlineDropdown = false;
+    this.isAirlineEmpty = true;
+    this.validateAirline(); // Validate after clearing
   }
 
   // Input change handlers with validation
@@ -1140,8 +1228,17 @@ export class DashboardComponent implements OnInit {
 
   // Validation methods
   validateFromAirport() {
+    // Check if empty for styling
+    this.isFromAirportEmpty = !this.fromSearchTerm || this.fromSearchTerm.trim() === '';
+    
     if (this.selectedFromAirport) {
       this.isFromAirportValid = true;
+      return;
+    }
+    
+    // Don't allow empty strings
+    if (this.isFromAirportEmpty) {
+      this.isFromAirportValid = false;
       return;
     }
     
@@ -1151,12 +1248,21 @@ export class DashboardComponent implements OnInit {
       airport.name.toLowerCase() === this.fromSearchTerm.toLowerCase()
     );
     
-    this.isFromAirportValid = isValid || this.fromSearchTerm === '';
+    this.isFromAirportValid = isValid;
   }
 
   validateToAirport() {
+    // Check if empty for styling
+    this.isToAirportEmpty = !this.toSearchTerm || this.toSearchTerm.trim() === '';
+    
     if (this.selectedToAirport) {
       this.isToAirportValid = true;
+      return;
+    }
+    
+    // Don't allow empty strings
+    if (this.isToAirportEmpty) {
+      this.isToAirportValid = false;
       return;
     }
     
@@ -1166,12 +1272,21 @@ export class DashboardComponent implements OnInit {
       airport.name.toLowerCase() === this.toSearchTerm.toLowerCase()
     );
     
-    this.isToAirportValid = isValid || this.toSearchTerm === '';
+    this.isToAirportValid = isValid;
   }
 
   validateAirline() {
+    // Check if empty for styling
+    this.isAirlineEmpty = !this.airlineSearchTerm || this.airlineSearchTerm.trim() === '';
+    
     if (this.selectedAirline) {
       this.isAirlineValid = true;
+      return;
+    }
+    
+    // Don't allow empty strings
+    if (this.isAirlineEmpty) {
+      this.isAirlineValid = false;
       return;
     }
     
@@ -1181,12 +1296,124 @@ export class DashboardComponent implements OnInit {
       airline.code.toLowerCase() === this.airlineSearchTerm.toLowerCase()
     );
     
-    this.isAirlineValid = isValid || this.airlineSearchTerm === '';
+    this.isAirlineValid = isValid;
+  }
+
+  // Additional validation methods
+  validateFlightNumber() {
+    this.isFlightNumberEmpty = !this.apiData.flightNumber || this.apiData.flightNumber.trim() === '';
+    this.isFlightNumberValid = !this.isFlightNumberEmpty;
+  }
+
+  validateArrivalTime() {
+    // Check if empty for styling
+    this.isArrivalTimeEmpty = this.arrivalTime === null;
+    // Check if arrival time is not null and is a valid Date object
+    this.isArrivalTimeValid = this.arrivalTime !== null && this.arrivalTime instanceof Date;
+  }
+
+  validateReturnFlightNumber() {
+    if (!this.isRoundtrip) {
+      this.isReturnFlightNumberValid = true;
+      this.isReturnFlightNumberEmpty = false;
+      return;
+    }
+    this.isReturnFlightNumberEmpty = !this.returnApiData.flightNumber || this.returnApiData.flightNumber.trim() === '';
+    this.isReturnFlightNumberValid = !this.isReturnFlightNumberEmpty;
+  }
+
+  validateReturnArrivalTime() {
+    if (!this.isRoundtrip) {
+      this.isReturnArrivalTimeValid = true;
+      this.isReturnArrivalTimeEmpty = false;
+      return;
+    }
+    // Check if empty for styling
+    this.isReturnArrivalTimeEmpty = this.returnArrivalTime === null;
+    // Check if return arrival time is not null and is a valid Date object
+    this.isReturnArrivalTimeValid = this.returnArrivalTime !== null && this.returnArrivalTime instanceof Date;
+  }
+
+  validateCandidateName() {
+    this.isCandidateNameEmpty = !this.candidateName || this.candidateName.trim() === '';
+    this.isCandidateNameValid = !this.isCandidateNameEmpty;
+  }
+
+  validateNumOfGuests() {
+    // Check if empty for styling
+    this.isNumOfGuestsEmpty = !this.apiData.numOfGuests || this.apiData.numOfGuests <= 0;
+    // Ensure number of guests is a positive integer
+    this.isNumOfGuestsValid = !!(this.apiData.numOfGuests && 
+                                 this.apiData.numOfGuests > 0 && 
+                                 Number.isInteger(this.apiData.numOfGuests));
+  }
+
+  validateComments() {
+    // Comments are optional and can be empty
+    this.isCommentsValid = true;
+  }
+
+  validateReturnComments() {
+    // Return comments are optional and can be empty
+    this.isReturnCommentsValid = true;
+  }
+
+  // Validate all fields
+  validateAllFields() {
+    this.validateFromAirport();
+    this.validateToAirport();
+    this.validateAirline();
+    this.validateFlightNumber();
+    this.validateArrivalTime();
+    this.validateReturnFlightNumber();
+    this.validateReturnArrivalTime();
+    this.validateCandidateName();
+    this.validateNumOfGuests();
+    this.validateComments();
+    this.validateReturnComments();
+    this.validateReturnDate();
+  }
+
+  // Comprehensive form validation
+  isFormValid(): boolean {
+    // Check all validation flags
+    const validationFlagsValid = this.isFromAirportValid && 
+           this.isToAirportValid && 
+           this.isAirlineValid && 
+           this.isReturnDateValid &&
+           this.isFlightNumberValid &&
+           this.isArrivalTimeValid &&
+           this.isReturnFlightNumberValid &&
+           this.isReturnArrivalTimeValid &&
+           this.isCandidateNameValid &&
+           this.isNumOfGuestsValid &&
+           this.isCommentsValid &&
+           this.isReturnCommentsValid;
+
+    // Check actual values
+    const valuesValid = this.flightDate !== null &&
+           this.arrivalTime !== null &&
+           this.arrivalTime instanceof Date &&
+           this.apiData.flightNumber.trim() !== '' &&
+           this.candidateName.trim() !== '' &&
+           this.apiData.numOfGuests > 0 &&
+           Number.isInteger(this.apiData.numOfGuests);
+
+    // For roundtrip, also check return values
+    const returnValuesValid = !this.isRoundtrip || (
+      this.returnDate !== null &&
+      this.returnArrivalTime !== null &&
+      this.returnArrivalTime instanceof Date &&
+      this.returnApiData.flightNumber.trim() !== ''
+    );
+
+    return validationFlagsValid && valuesValid && returnValuesValid;
   }
 
   // Date change handlers
   onFlightDateChange(date: Date | null) {
     this.flightDate = date;
+    this.isFlightDateEmpty = date === null;
     // Validate return date when flight date changes
     if (this.isRoundtrip) {
       this.validateReturnDate();
@@ -1195,6 +1422,7 @@ export class DashboardComponent implements OnInit {
 
   onReturnDateChange(date: Date | null) {
     this.returnDate = date;
+    this.isReturnDateEmpty = this.isRoundtrip && date === null;
     // Validate return date when return date changes
     if (this.isRoundtrip) {
       this.validateReturnDate();

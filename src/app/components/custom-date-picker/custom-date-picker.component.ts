@@ -174,6 +174,7 @@ export class CustomDatePickerComponent implements ControlValueAccessor, OnInit, 
   @Input() ariaDescribedBy: string = '';
   @Input() errorMessage: string = '';
   @Input() name: string = '';
+  @Input() customClasses: string = '';
 
   @ViewChild('dateInput') dateInput!: ElementRef<HTMLInputElement>;
 
@@ -217,7 +218,9 @@ export class CustomDatePickerComponent implements ControlValueAccessor, OnInit, 
   }
 
   get inputClasses(): string {
-    return 'w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all duration-200 text-sm font-montserrat cursor-pointer bg-white';
+    const baseClasses = 'w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all duration-200 text-sm font-montserrat cursor-pointer bg-white';
+    const defaultBorder = 'border-gray-300';
+    return this.customClasses ? `${baseClasses} ${this.customClasses}` : `${baseClasses} ${defaultBorder}`;
   }
 
   ngOnInit() {
