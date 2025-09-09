@@ -83,6 +83,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       (focus)="onFromInputFocus()"
                       (blur)="onFromInputBlur()"
                       required
+                      autocomplete="off"
                       [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isFromAirportEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., LAX - Los Angeles"
                     >
@@ -135,6 +136,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       (focus)="onToInputFocus()"
                       (blur)="onToInputBlur()"
                       required
+                      autocomplete="off"
                       [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isToAirportEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., JFK - New York"
                     >
@@ -199,6 +201,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       (focus)="onAirlineInputFocus()"
                       (blur)="onAirlineInputBlur()"
                       required
+                      autocomplete="off"
                       [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isAirlineEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., American Airlines"
                     >
@@ -313,6 +316,10 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       [(ngModel)]="apiData.flightNumber"
                       (input)="validateFlightNumber()"
                       required
+                      autocomplete="off"
+                      maxlength="6"
+                      pattern="[A-Za-z]{1,3}[0-9]{1,4}"
+                      title="Flight number must be 3-6 characters: 1-3 letters followed by 1-4 digits (e.g., AA123, BA1234)"
                       [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isFlightNumberEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., AA123"
                     >
@@ -437,6 +444,10 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       [(ngModel)]="returnApiData.flightNumber"
                       (input)="validateReturnFlightNumber()"
                       required
+                      autocomplete="off"
+                      maxlength="6"
+                      pattern="[A-Za-z]{1,3}[0-9]{1,4}"
+                      title="Flight number must be 3-6 characters: 1-3 letters followed by 1-4 digits (e.g., AA123, BA1234)"
                       [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat ' + (isReturnFlightNumberEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., AA456"
                     >
@@ -475,6 +486,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                     name="returnComments"
                     [(ngModel)]="returnApiData.comments"
                     (input)="validateReturnComments()"
+                    autocomplete="off"
                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat resize-none"
                     rows="2"
                     placeholder="Additional comments about your return flight..."
@@ -735,6 +747,83 @@ export class DashboardComponent implements OnInit {
 
     // Initialize validation
     this.validateAllFields();
+
+    // Handle autofill detection
+    this.setupAutofillDetection();
+  }
+
+  setupAutofillDetection() {
+    // Use MutationObserver to detect autofill changes
+    const observer = new MutationObserver(() => {
+      this.detectAutofillChanges();
+    });
+
+    // Observe the form for changes
+    const form = document.querySelector('form');
+    if (form) {
+      observer.observe(form, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ['value']
+      });
+    }
+
+    // Also check periodically for autofill
+    setInterval(() => {
+      this.detectAutofillChanges();
+    }, 1000);
+  }
+
+  detectAutofillChanges() {
+    // Check airline field
+    const airlineInput = document.getElementById('airline') as HTMLInputElement;
+    if (airlineInput && airlineInput.value !== this.airlineSearchTerm) {
+      this.airlineSearchTerm = airlineInput.value;
+      this.validateAirline();
+    }
+
+    // Check from airport field
+    const fromInput = document.getElementById('from') as HTMLInputElement;
+    if (fromInput && fromInput.value !== this.fromSearchTerm) {
+      this.fromSearchTerm = fromInput.value;
+      this.validateFromAirport();
+    }
+
+    // Check to airport field
+    const toInput = document.getElementById('to') as HTMLInputElement;
+    if (toInput && toInput.value !== this.toSearchTerm) {
+      this.toSearchTerm = toInput.value;
+      this.validateToAirport();
+    }
+
+    // Check flight number field
+    const flightNumberInput = document.getElementById('flightNumber') as HTMLInputElement;
+    if (flightNumberInput && flightNumberInput.value !== this.apiData.flightNumber) {
+      this.apiData.flightNumber = flightNumberInput.value;
+      this.validateFlightNumber();
+    }
+
+    // Check candidate name field
+    const candidateNameInput = document.getElementById('candidateName') as HTMLInputElement;
+    if (candidateNameInput && candidateNameInput.value !== this.candidateName) {
+      this.candidateName = candidateNameInput.value;
+      this.validateCandidateName();
+    }
+
+    // Check return flight number field (for roundtrip)
+    const returnFlightNumberInput = document.getElementById('returnFlightNumber') as HTMLInputElement;
+    if (returnFlightNumberInput && returnFlightNumberInput.value !== this.returnApiData.flightNumber) {
+      this.returnApiData.flightNumber = returnFlightNumberInput.value;
+      this.validateReturnFlightNumber();
+    }
+
+    // Check return comments field (for roundtrip)
+    const returnCommentsInput = document.getElementById('returnComments') as HTMLInputElement;
+    if (returnCommentsInput && returnCommentsInput.value !== this.returnApiData.comments) {
+      this.returnApiData.comments = returnCommentsInput.value;
+      this.validateReturnComments();
+    }
   }
 
   async submitFlight() {
@@ -743,6 +832,15 @@ export class DashboardComponent implements OnInit {
     this.successMessage = '';
     this.errorMessage = '';
     this.airportValidationError = '';
+
+    // Validate all fields first
+    this.validateAllFields();
+
+    // Check if form is valid before proceeding
+    if (!this.isFormValid()) {
+      this.isSubmitting = false;
+      return;
+    }
 
     try {
       // Validate return date if roundtrip
@@ -774,12 +872,16 @@ export class DashboardComponent implements OnInit {
 
       // Update flight data with current form values
       this.flightData.date = this.flightDate || new Date();
-      this.flightData.airline = this.apiData.airline;
+      
+      // Get the correct airline value - either selected airline or validated search term
+      const airlineValue = this.selectedAirline ? this.selectedAirline.name : this.airlineSearchTerm;
+      this.flightData.airline = airlineValue;
+      this.apiData.airline = airlineValue;
 
       // Prepare API payload
       const apiPayload: FlightInfoPayload = {
         ...this.apiData,
-        airline: this.flightData.airline,
+        airline: airlineValue,
         arrivalDate: this.flightDate ? this.flightDate.toISOString().split('T')[0] : '',
         arrivalTime: this.arrivalTime ? this.arrivalTime.toTimeString().slice(0, 5) : ''
       };
@@ -790,12 +892,16 @@ export class DashboardComponent implements OnInit {
       // Prepare complete flight data for Firestore
       const completeFlightData = {
         ...this.flightData,
+        from: this.flightData.from || this.fromSearchTerm,
+        to: this.flightData.to || this.toSearchTerm,
+        airline: airlineValue,
         flightNumber: this.apiData.flightNumber,
-        arrivalTime: this.apiData.arrivalTime,
+        arrivalTime: this.arrivalTime ? this.arrivalTime.toTimeString().slice(0, 5) : '',
         numOfGuests: this.apiData.numOfGuests,
         candidateName: this.candidateName,
         comments: this.apiData.comments
       };
+
 
       // Then save to Firestore
       await this.flightService.addFlight(completeFlightData);
@@ -932,12 +1038,20 @@ export class DashboardComponent implements OnInit {
 
   incrementGuests() {
     this.apiData.numOfGuests = (this.apiData.numOfGuests || 1) + 1;
+    // Update return flight guests if roundtrip is enabled
+    if (this.isRoundtrip) {
+      this.returnApiData.numOfGuests = this.apiData.numOfGuests;
+    }
     this.validateNumOfGuests();
   }
 
   decrementGuests() {
     if (this.apiData.numOfGuests > 1) {
       this.apiData.numOfGuests = this.apiData.numOfGuests - 1;
+      // Update return flight guests if roundtrip is enabled
+      if (this.isRoundtrip) {
+        this.returnApiData.numOfGuests = this.apiData.numOfGuests;
+      }
       this.validateNumOfGuests();
     }
   }
@@ -1302,7 +1416,24 @@ export class DashboardComponent implements OnInit {
   // Additional validation methods
   validateFlightNumber() {
     this.isFlightNumberEmpty = !this.apiData.flightNumber || this.apiData.flightNumber.trim() === '';
-    this.isFlightNumberValid = !this.isFlightNumberEmpty;
+    
+    if (this.isFlightNumberEmpty) {
+      this.isFlightNumberValid = false;
+      return;
+    }
+
+    const flightNumber = this.apiData.flightNumber.trim().toUpperCase();
+    
+    // Flight number constraints:
+    // - 3-6 characters total
+    // - Must start with 1-3 letters (airline code)
+    // - Followed by 1-4 digits
+    // - Common patterns: AA123, BA1234, DL12345, etc.
+    const flightNumberPattern = /^[A-Z]{1,3}\d{1,4}$/;
+    const isValidLength = flightNumber.length >= 3 && flightNumber.length <= 6;
+    const isValidFormat = flightNumberPattern.test(flightNumber);
+    
+    this.isFlightNumberValid = isValidLength && isValidFormat;
   }
 
   validateArrivalTime() {
@@ -1318,8 +1449,25 @@ export class DashboardComponent implements OnInit {
       this.isReturnFlightNumberEmpty = false;
       return;
     }
+    
     this.isReturnFlightNumberEmpty = !this.returnApiData.flightNumber || this.returnApiData.flightNumber.trim() === '';
-    this.isReturnFlightNumberValid = !this.isReturnFlightNumberEmpty;
+    
+    if (this.isReturnFlightNumberEmpty) {
+      this.isReturnFlightNumberValid = false;
+      return;
+    }
+
+    const flightNumber = this.returnApiData.flightNumber.trim().toUpperCase();
+    
+    // Flight number constraints (same as main flight number):
+    // - 3-6 characters total
+    // - Must start with 1-3 letters (airline code)
+    // - Followed by 1-4 digits
+    const flightNumberPattern = /^[A-Z]{1,3}\d{1,4}$/;
+    const isValidLength = flightNumber.length >= 3 && flightNumber.length <= 6;
+    const isValidFormat = flightNumberPattern.test(flightNumber);
+    
+    this.isReturnFlightNumberValid = isValidLength && isValidFormat;
   }
 
   validateReturnArrivalTime() {
@@ -1346,6 +1494,11 @@ export class DashboardComponent implements OnInit {
     this.isNumOfGuestsValid = !!(this.apiData.numOfGuests && 
                                  this.apiData.numOfGuests > 0 && 
                                  Number.isInteger(this.apiData.numOfGuests));
+    
+    // Update return flight guests if roundtrip is enabled
+    if (this.isRoundtrip) {
+      this.returnApiData.numOfGuests = this.apiData.numOfGuests;
+    }
   }
 
   validateComments() {
@@ -1397,7 +1550,9 @@ export class DashboardComponent implements OnInit {
            this.apiData.flightNumber.trim() !== '' &&
            this.candidateName.trim() !== '' &&
            this.apiData.numOfGuests > 0 &&
-           Number.isInteger(this.apiData.numOfGuests);
+           Number.isInteger(this.apiData.numOfGuests) &&
+           // Check airline validation - either selected airline or valid search term
+           (this.selectedAirline !== null || (!!this.airlineSearchTerm && this.airlineSearchTerm.trim() !== '' && this.isAirlineValid));
 
     // For roundtrip, also check return values
     const returnValuesValid = !this.isRoundtrip || (
