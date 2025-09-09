@@ -9,24 +9,25 @@ import { format, setHours, setMinutes, addHours, subHours, addMinutes, subMinute
   standalone: true,
   imports: [CommonModule],
   template: `
-    <input
-      #timeInput
-      type="text"
-      [value]="displayValue"
-      (click)="toggleTimePicker()"
-      (blur)="onBlur()"
-      (focus)="onFocus()"
-      [disabled]="disabled"
-      [class]="inputClasses"
-      [attr.aria-label]="ariaLabel || 'Select time'"
-      [attr.aria-describedby]="ariaDescribedBy"
-      [attr.aria-invalid]="hasError"
-      [attr.aria-expanded]="isOpen"
-      [attr.aria-haspopup]="'dialog'"
-      [name]="name"
-      placeholder="2:30 PM"
-      readonly
-    />
+    <div class="relative">
+      <input
+        #timeInput
+        type="text"
+        [value]="displayValue"
+        (click)="toggleTimePicker()"
+        (blur)="onBlur()"
+        (focus)="onFocus()"
+        [disabled]="disabled"
+        [class]="inputClasses"
+        [attr.aria-label]="ariaLabel || 'Select time'"
+        [attr.aria-describedby]="ariaDescribedBy"
+        [attr.aria-invalid]="hasError"
+        [attr.aria-expanded]="isOpen"
+        [attr.aria-haspopup]="'dialog'"
+        [name]="name"
+        placeholder="2:30 PM"
+        readonly
+      />
     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
       <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -46,11 +47,11 @@ import { format, setHours, setMinutes, addHours, subHours, addMinutes, subMinute
       <!-- Time Picker Modal -->
       <div
         *ngIf="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+        class="absolute left-0 right-0 z-50 top-full mt-1"
         (click)="closeTimePicker()"
       >
         <div
-          class="w-full max-w-sm bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
+          class="w-full max-w-sm bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden mx-auto"
           (click)="$event.stopPropagation()"
           [@modalIn]
         >
@@ -187,6 +188,7 @@ import { format, setHours, setMinutes, addHours, subHours, addMinutes, subMinute
       <div *ngIf="hasError && errorMessage" class="mt-1 text-sm text-red-600" role="alert">
         {{ errorMessage }}
       </div>
+    </div>
   `,
   providers: [
     {
@@ -215,6 +217,7 @@ import { format, setHours, setMinutes, addHours, subHours, addMinutes, subMinute
   ]
 })
 export class CustomTimePickerComponent implements ControlValueAccessor, OnInit, OnDestroy, AfterViewInit {
+  
   @Input() placeholder: string = 'Select time';
   @Input() disabled: boolean = false;
   @Input() required: boolean = false;
@@ -224,7 +227,6 @@ export class CustomTimePickerComponent implements ControlValueAccessor, OnInit, 
   @Input() name: string = '';
   @Input() customClasses: string = '';
 
-  @ViewChild('timeInput') timeInput!: ElementRef<HTMLInputElement>;
 
   private _value: Date | null = null;
   private _isFocused = false;
@@ -353,15 +355,10 @@ export class CustomTimePickerComponent implements ControlValueAccessor, OnInit, 
     if (this.disabled) return;
     this._isOpen = !this._isOpen;
     if (this._isOpen) {
-      // Lock body scroll when modal is open
-      document.body.style.overflow = 'hidden';
       // Use setTimeout to ensure the modal is rendered before loading data
       setTimeout(() => {
         this.ensureTimeDataLoaded();
       }, 0);
-    } else {
-      // Restore body scroll when modal is closed
-      document.body.style.overflow = '';
     }
   }
 
