@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { isSignInWithEmailLink } from '@angular/fire/auth';
+import { ErrorHandlerService } from '../../services/error-handler.service';
 
 @Component({
   selector: 'app-login',
@@ -204,7 +205,8 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private errorHandler: ErrorHandlerService
   ) {}
 
   ngOnInit() {
@@ -235,7 +237,8 @@ export class LoginComponent implements OnInit {
       await this.authService.sendMagicLink(this.email.trim(), this.firstName.trim(), this.lastName.trim());
       this.linkSent = true;
     } catch (error: any) {
-      this.error = error.message || 'Failed to send magic link. Please try again.';
+      this.errorHandler.logError(error, 'LoginComponent.sendMagicLink');
+      this.error = this.errorHandler.getGenericErrorMessage(error);
     } finally {
       this.isLoading = false;
     }
@@ -248,7 +251,8 @@ export class LoginComponent implements OnInit {
     try {
       await this.authService.signInWithGoogle();
     } catch (error: any) {
-      this.error = error.message || 'Failed to sign in with Google. Please try again.';
+      this.errorHandler.logError(error, 'LoginComponent.signInWithGoogle');
+      this.error = this.errorHandler.getGenericErrorMessage(error);
     } finally {
       this.isLoading = false;
     }
@@ -262,7 +266,8 @@ export class LoginComponent implements OnInit {
       // Redirect to dashboard
       this.router.navigate(['/']);
     } catch (error: any) {
-      this.error = error.message || 'Failed to sign in. Please try again.';
+      this.errorHandler.logError(error, 'LoginComponent.handleMagicLinkSignIn');
+      this.error = this.errorHandler.getGenericErrorMessage(error);
       this.isProcessingMagicLink = false;
     }
   }

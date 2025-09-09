@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { FlightService, Flight, FlightInfoPayload } from '../../services/flight.service';
 import { Router } from '@angular/router';
 import { US_AIRPORTS, US_AIRLINES, Airport, Airline } from '../../constants/us-airports.constants';
+import { ErrorHandlerService } from '../../services/error-handler.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -647,7 +648,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private flightService: FlightService,
-    private router: Router
+    private router: Router,
+    private errorHandler: ErrorHandlerService
   ) {}
 
   ngOnInit() {
@@ -770,7 +772,8 @@ export class DashboardComponent implements OnInit {
         this.resetForm();
       }, 100);
     } catch (error: any) {
-      this.errorMessage = error.message || 'Failed to log flight. Please try again.';
+      this.errorHandler.logError(error, 'DashboardComponent.submitFlight');
+      this.errorMessage = this.errorHandler.getGenericErrorMessage(error);
     } finally {
       this.isSubmitting = false;
     }

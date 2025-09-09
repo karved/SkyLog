@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, addDoc, query, where, orderBy, onSnapshot, Timestamp } from '@angular/fire/firestore';
 import { AuthService } from './auth.service';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../environment';
+import { ErrorHandlerService } from './error-handler.service';
 
 export interface Flight {
   id?: string;
@@ -43,7 +44,8 @@ export class FlightService {
   constructor(
     private firestore: Firestore,
     private authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
   ) {
     this.initializeFlightsListener();
   }
@@ -96,15 +98,20 @@ export class FlightService {
       throw new Error('User not authenticated');
     }
 
-    const flightData = {
-      ...flight,
-      userId: user.uid,
-      date: Timestamp.fromDate(flight.date),
-      createdAt: Timestamp.fromDate(new Date())
-    };
+    try {
+      const flightData = {
+        ...flight,
+        userId: user.uid,
+        date: Timestamp.fromDate(flight.date),
+        createdAt: Timestamp.fromDate(new Date())
+      };
 
-    const flightsRef = collection(this.firestore, 'flights');
-    await addDoc(flightsRef, flightData);
+      const flightsRef = collection(this.firestore, 'flights');
+      await addDoc(flightsRef, flightData);
+    } catch (error) {
+      this.errorHandler.logError(error, 'FlightService.addFlight');
+      throw new Error(this.errorHandler.getGenericErrorMessage(error));
+    }
   }
 
   async submitFlightInfo(payload: FlightInfoPayload, candidateName: string): Promise<any> {
@@ -114,6 +121,11 @@ export class FlightService {
       'Content-Type': 'application/json'
     });
 
-    return this.http.post(this.API_URL, payload, { headers }).toPromise();
+    try {
+      return await this.http.post(this.API_URL, payload, { headers }).toPromise();
+    } catch (error) {
+      this.errorHandler.logError(error, 'FlightService.submitFlightInfo');
+      throw new Error(this.errorHandler.getGenericErrorMessage(error));
+    }
   }
 }

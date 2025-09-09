@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { ErrorHandlerService } from '../../services/error-handler.service';
 
 @Component({
   selector: 'app-logout',
@@ -28,7 +29,8 @@ import { Router } from '@angular/router';
 export class LogoutComponent implements OnInit {
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private errorHandler: ErrorHandlerService
   ) {}
 
   async ngOnInit() {
@@ -36,7 +38,7 @@ export class LogoutComponent implements OnInit {
       await this.authService.signOut();
       // The signOut method already handles navigation to /login
     } catch (error) {
-      console.error('Error during logout:', error);
+      this.errorHandler.logError(error, 'LogoutComponent.ngOnInit');
       // If there's an error, still redirect to login
       this.router.navigate(['/login']);
     }

@@ -17,4 +17,9 @@ bootstrapApplication(AppComponent, {
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore())
   ]
-}).catch(err => console.error(err));
+}).catch(err => {
+  // Only log in development mode
+  if (!environment.production) {
+    console.error('Bootstrap error:', err);
+  }
+});
