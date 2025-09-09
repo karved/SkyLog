@@ -53,7 +53,25 @@ input, textarea, select {
 }
 
 .input-field {
-  @apply w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:border-primary/50 text-sm font-medium;
+  @apply w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:border-primary/50 text-sm font-medium bg-white;
+}
+
+/* Floating label input container */
+.floating-input-container {
+  @apply relative;
+}
+
+.floating-input {
+  @apply w-full px-4 py-4 pt-8 pb-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:border-primary/50 text-sm font-medium bg-white;
+}
+
+.floating-input:focus {
+  @apply outline-none;
+}
+
+.floating-input:not(:placeholder-shown) + .floating-label,
+.floating-input:focus + .floating-label {
+  @apply floating-label-focused;
 }
 
 .form-group {
@@ -145,15 +163,20 @@ button:disabled {
 
 /* Floating label styles */
 .floating-label {
-  transition: all 0.2s ease-in-out;
+  @apply absolute left-4 pointer-events-none transition-all duration-200 ease-in-out;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: #6B7280;
+  font-weight: 500;
 }
 
 .floating-label-focused {
-  top: 0.25rem !important;
+  top: 0.5rem !important;
   transform: translateY(0) !important;
   font-size: 0.75rem !important;
   color: #38BDF8 !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
 }
 
 .floating-label-unfocused {
@@ -161,4 +184,26 @@ button:disabled {
   transform: translateY(-50%) !important;
   font-size: 0.875rem !important;
   color: #6B7280 !important;
+  font-weight: 500 !important;
+}
+
+/* Email info styling */
+.email-info {
+  @apply bg-white/60 rounded-lg p-4 border border-green-200;
+}
+
+.email-sender {
+  @apply flex items-center space-x-2;
+}
+
+.email-sender-name {
+  @apply text-green-700 text-sm font-medium;
+}
+
+.email-sender-address {
+  @apply text-green-600 text-sm;
+}
+
+.email-support-link {
+  @apply text-green-800 hover:text-green-900 underline font-medium transition-colors duration-200;
 }

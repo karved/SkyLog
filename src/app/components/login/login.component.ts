@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { isSignInWithEmailLink } from '@angular/fire/auth';
 import { ErrorHandlerService } from '../../services/error-handler.service';
+import { environment } from '../../../environment';
 
 @Component({
   selector: 'app-login',
@@ -40,7 +41,7 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
           <form (ngSubmit)="sendMagicLink()" #loginForm="ngForm">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="form-group">
-                <div class="relative">
+                <div class="floating-input-container">
                   <input
                     type="text"
                     id="firstName"
@@ -49,10 +50,10 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
                     (focus)="onInputFocus('firstName')"
                     (blur)="onInputBlur('firstName')"
                     required
-                    class="input-field text-xs py-4 px-4 pt-8 pb-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:border-primary/50"
+                    class="floating-input"
                     placeholder=" "
                   >
-                  <label for="firstName" class="absolute left-4 floating-label pointer-events-none"
+                  <label for="firstName" class="floating-label"
                          [class]="focusedField === 'firstName' || firstName ? 'floating-label-focused' : 'floating-label-unfocused'">
                     First Name
                   </label>
@@ -60,7 +61,7 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
               </div>
 
               <div class="form-group">
-                <div class="relative">
+                <div class="floating-input-container">
                   <input
                     type="text"
                     id="lastName"
@@ -69,10 +70,10 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
                     (focus)="onInputFocus('lastName')"
                     (blur)="onInputBlur('lastName')"
                     required
-                    class="input-field text-xs py-4 px-4 pt-8 pb-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:border-primary/50"
+                    class="floating-input"
                     placeholder=" "
                   >
-                  <label for="lastName" class="absolute left-4 floating-label pointer-events-none"
+                  <label for="lastName" class="floating-label"
                          [class]="focusedField === 'lastName' || lastName ? 'floating-label-focused' : 'floating-label-unfocused'">
                     Last Name
                   </label>
@@ -81,7 +82,7 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
             </div>
 
             <div class="form-group">
-              <div class="relative">
+              <div class="floating-input-container">
                 <input
                   type="email"
                   id="email"
@@ -90,10 +91,10 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
                   (focus)="onInputFocus('email')"
                   (blur)="onInputBlur('email')"
                   required
-                  class="input-field text-xs py-4 px-4 pt-8 pb-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:border-primary/50"
+                  class="floating-input"
                   placeholder=" "
                 >
-                <label for="email" class="absolute left-4 floating-label pointer-events-none"
+                <label for="email" class="floating-label"
                        [class]="focusedField === 'email' || email ? 'floating-label-focused' : 'floating-label-unfocused'">
                   Email Address
                 </label>
@@ -154,11 +155,16 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
             <p class="text-green-700 text-base mb-3">
               Check your email and click the link to sign in.
             </p>
-            <div class="bg-white/60 rounded-lg p-3 border border-green-200">
-              <p class="text-green-600 text-sm">
-                <strong class="text-green-800">Don't see the email?</strong> Check your spam folder.<br>
-                <strong class="text-green-800">Sender:</strong> noreply&#64;skylog-monster.firebaseapp.com
-              </p>
+            <div class="email-info">
+              <div class="space-y-2">
+                <p class="text-green-600 text-sm">
+                  <strong class="text-green-800">Don't see the email?</strong> Check your spam folder.
+                </p>
+                <div class="space-y-1">
+                  <p class="text-green-800 font-semibold text-sm">From: {{ senderName }}</p>
+                  <p class="text-green-600 text-sm">{{ senderEmail }}</p>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -202,6 +208,11 @@ export class LoginComponent implements OnInit {
   isProcessingMagicLink = false;
   error = '';
   focusedField = '';
+  
+  // Email configuration
+  senderName = environment.email.senderName;
+  senderEmail = environment.email.senderEmail;
+  supportEmail = environment.email.supportEmail;
 
   constructor(
     private authService: AuthService,
@@ -210,11 +221,27 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Check for session storage message
+    const magicLinkError = sessionStorage.getItem('magicLinkError');
+    if (magicLinkError) {
+      this.error = magicLinkError;
+      sessionStorage.removeItem('magicLinkError');
+    }
+
     // Check if this is a magic link callback
     if (isSignInWithEmailLink(this.authService['auth'], window.location.href)) {
       this.isProcessingMagicLink = true;
       this.handleMagicLinkSignIn();
       return; // Don't proceed with other checks
+    }
+
+    // Check if we're in the middle of processing a magic link (page refresh case)
+    const isProcessingMagicLink = sessionStorage.getItem('isProcessingMagicLink');
+    if (isProcessingMagicLink === 'true') {
+      this.isProcessingMagicLink = true;
+      // Try to complete the magic link sign in
+      this.handleMagicLinkSignIn();
+      return;
     }
 
     // Redirect if already authenticated
@@ -260,14 +287,32 @@ export class LoginComponent implements OnInit {
 
   async handleMagicLinkSignIn() {
     try {
+      // Set flag to indicate we're processing a magic link
+      sessionStorage.setItem('isProcessingMagicLink', 'true');
+      
       await this.authService.signInWithMagicLink(window.location.href);
+      
+      // Clear the processing flag
+      sessionStorage.removeItem('isProcessingMagicLink');
+      
       // Clear the URL to prevent re-processing
       window.history.replaceState({}, document.title, window.location.pathname);
+      
       // Redirect to dashboard
       this.router.navigate(['/']);
     } catch (error: any) {
       this.errorHandler.logError(error, 'LoginComponent.handleMagicLinkSignIn');
-      this.error = this.errorHandler.getGenericErrorMessage(error);
+      
+      // Clear the processing flag
+      sessionStorage.removeItem('isProcessingMagicLink');
+      
+      // Check if it's a localStorage error and handle gracefully
+      if (error.name === 'LocalStorageError' || (error.message && error.message.includes('localStorage'))) {
+        this.error = 'Please request a new magic link. Your previous session has expired.';
+      } else {
+        this.error = this.errorHandler.getGenericErrorMessage(error);
+      }
+      
       this.isProcessingMagicLink = false;
     }
   }
@@ -279,6 +324,9 @@ export class LoginComponent implements OnInit {
     this.email = '';
     this.error = '';
     this.focusedField = '';
+    // Clear any session storage flags and errors
+    sessionStorage.removeItem('magicLinkError');
+    sessionStorage.removeItem('isProcessingMagicLink');
   }
 
   onInputFocus(fieldName: string) {

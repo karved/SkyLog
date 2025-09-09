@@ -62,8 +62,11 @@ export class AuthService {
       const firstName = localStorage.getItem('firstNameForSignIn');
       const lastName = localStorage.getItem('lastNameForSignIn');
       
+      // If email is not in localStorage, throw a specific error that can be handled gracefully
       if (!email) {
-        throw new Error('Email not found in localStorage');
+        const error = new Error('localStorage email not found');
+        error.name = 'LocalStorageError';
+        throw error;
       }
 
       const result = await signInWithEmailLink(this.auth, email, url);
@@ -86,7 +89,7 @@ export class AuthService {
       this.router.navigate(['/']);
     } catch (error) {
       this.errorHandler.logError(error, 'AuthService.signInWithMagicLink');
-      throw new Error(this.errorHandler.getGenericErrorMessage(error));
+      throw error; // Re-throw the original error to preserve error type
     }
   }
 
