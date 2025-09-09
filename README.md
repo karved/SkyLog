@@ -6,6 +6,7 @@ A modern flight tracking web application built with Angular 17 and Firebase, fea
 
 - **Dual Authentication**: Magic link email authentication and Google Sign-In
 - **Advanced Flight Logging**: Log flights with comprehensive details including roundtrip support
+- **Custom Date & Time Pickers**: Beautiful, accessible custom date and time selection components with modal interfaces
 - **Real-time Updates**: Flight history updates in real-time using Firestore
 - **API Integration**: Submits flight data to external API challenge endpoint
 - **Smart Airport/Airline Selection**: Auto-complete dropdowns with US airports and airlines
@@ -17,6 +18,7 @@ A modern flight tracking web application built with Angular 17 and Firebase, fea
 
 - **Frontend**: Angular 17+ with standalone components and lazy loading
 - **Styling**: TailwindCSS with Montserrat font and custom animations
+- **Date/Time Handling**: date-fns library for date manipulation and formatting
 - **Backend**: Firebase (Authentication, Firestore, Hosting)
 - **Database**: Cloud Firestore with security rules
 - **Authentication**: Firebase Auth with magic link and Google Sign-In
@@ -28,22 +30,25 @@ A modern flight tracking web application built with Angular 17 and Firebase, fea
 src/
 ├── app/
 │   ├── components/
-│   │   ├── dashboard/          # Main dashboard with flight form and history
-│   │   ├── login/              # Magic link and Google authentication
-│   │   └── logout/             # Logout component
+│   │   ├── custom-date-picker/     # Custom date picker with calendar modal
+│   │   ├── custom-time-picker/     # Custom time picker with time controls
+│   │   ├── dashboard/              # Main dashboard with flight form and history
+│   │   ├── login/                  # Magic link and Google authentication
+│   │   └── logout/                 # Logout component
 │   ├── constants/
 │   │   ├── us-airports.constants.ts  # US airports and airlines data
 │   │   └── flight.constants.ts       # Flight-related constants
 │   ├── guards/
-│   │   └── auth.guard.ts       # Route protection
+│   │   └── auth.guard.ts           # Route protection
 │   ├── services/
-│   │   ├── auth.service.ts     # Authentication service (magic link + Google)
-│   │   └── flight.service.ts   # Flight data and API service
-│   ├── app.component.ts        # Root component
-│   └── app.routes.ts           # Application routing with lazy loading
-├── environment.ts              # Development environment config
-├── environment.prod.ts         # Production environment config
-└── styles.css                 # Global styles with TailwindCSS
+│   │   ├── auth.service.ts         # Authentication service (magic link + Google)
+│   │   ├── error-handler.service.ts # Error handling service
+│   │   └── flight.service.ts       # Flight data and API service
+│   ├── app.component.ts            # Root component
+│   └── app.routes.ts               # Application routing with lazy loading
+├── environment.ts                  # Development environment config
+├── environment.prod.ts             # Production environment config
+└── styles.css                     # Global styles with TailwindCSS
 ```
 
 ## Setup Instructions
