@@ -168,6 +168,10 @@ export class AuthService {
   async signOut(): Promise<void> {
     try {
       await signOut(this.auth);
+      
+      // Clear all persistence data on logout
+      this.clearPersistenceData();
+      
       this.router.navigate(['/login']);
     } catch (error) {
       this.errorHandler.logError(error, 'AuthService.signOut');
@@ -183,6 +187,14 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  /**
+   * Public method to clear all persistence data
+   * Can be called from other components if needed
+   */
+  public clearAllPersistenceData(): void {
+    this.clearPersistenceData();
+  }
+
   private async updateLastLogin(userId: string): Promise<void> {
     try {
       const userRef = doc(this.firestore, 'users', userId);
@@ -190,6 +202,26 @@ export class AuthService {
     } catch (error) {
       this.errorHandler.logError(error, 'AuthService.updateLastLogin');
       // Don't throw error as this is not critical
+    }
+  }
+
+  private clearPersistenceData(): void {
+    try {
+      // Clear form data persistence
+      localStorage.removeItem('skylog-form-data');
+      
+      // Clear magic link related data (in case user was in middle of magic link flow)
+      localStorage.removeItem('emailForSignIn');
+      localStorage.removeItem('firstNameForSignIn');
+      localStorage.removeItem('lastNameForSignIn');
+      
+      // Clear any other app-specific persistence data
+      // Add more keys here if you have other localStorage data to clear
+      
+      console.log('Persistence data cleared on logout');
+    } catch (error) {
+      console.warn('Could not clear persistence data:', error);
+      // Don't throw error as this is not critical for logout
     }
   }
 

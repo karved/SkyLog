@@ -544,7 +544,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
 
           <!-- Flight History -->
           <div class="card h-full overflow-y-auto">
-            <h2 class="text-xl font-bold text-gray-900 mb-4 font-montserrat">Flight History</h2>
+            <h2 class="text-xl font-bold text-gray-900 mb-4 font-montserrat">Flight History ({{ flights.length }})</h2>
             
             <div *ngIf="flights.length === 0" class="text-center py-12">
               <div class="w-20 h-20 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
@@ -760,6 +760,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         } else if (this.userFirstName) {
           this.candidateName = this.userFirstName;
         }
+      } else {
+        // User logged out - clear form data
+        this.clearFormDataOnLogout();
       }
     });
 
@@ -1853,6 +1856,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
+  }
+
+  /**
+   * Clear form data when user logs out
+   * This ensures a clean state for the next user
+   */
+  private clearFormDataOnLogout(): void {
+    this.clearFormData();
+    this.resetForm();
   }
 
 }
