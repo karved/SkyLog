@@ -1,16 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { FlightService, Flight, FlightInfoPayload } from '../../services/flight.service';
 import { Router } from '@angular/router';
 import { US_AIRPORTS, US_AIRLINES, Airport, Airline } from '../../constants/us-airports.constants';
 import { ErrorHandlerService } from '../../services/error-handler.service';
+import { CustomDatePickerComponent } from '../custom-date-picker/custom-date-picker.component';
+import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-picker.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule, CustomDatePickerComponent, CustomTimePickerComponent],
   template: `
     <div class="h-screen bg-background flex flex-col overflow-hidden">
       <!-- Header -->
@@ -231,49 +234,57 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
                 </div>
                 
                 <div class="form-group">
-                  <label for="date" class="label-with-icon">
+                  <label class="label-with-icon">
                     <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                     Flight Date
                   </label>
                   <div class="relative">
-                    <input
-                      type="date"
-                      id="date"
-                      name="date"
-                      [(ngModel)]="flightDateString"
-                      required
-                      class="w-full pl-4 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat"
-                    >
-                    <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
+                    <app-custom-date-picker
+                      [(ngModel)]="flightDate"
+                      (ngModelChange)="onFlightDateChange($event)"
+                      [required]="true"
+                      [minDate]="minDate"
+                      [maxDate]="maxDate"
+                      ariaLabel="Select flight date"
+                      errorMessage="Please select a valid flight date"
+                      name="flightDate"
+                    ></app-custom-date-picker>
                   </div>
                 </div>
               </div>
               
               <!-- Roundtrip Return Date -->
               <div *ngIf="isRoundtrip" class="form-group">
-                <label for="returnDate" class="label-with-icon">
+                <label class="label-with-icon">
                   <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
                   Return Date
                 </label>
                 <div class="relative">
-                  <input
-                    type="date"
-                    id="returnDate"
+                  <app-custom-date-picker
+                    [(ngModel)]="returnDate"
+                    (ngModelChange)="onReturnDateChange($event)"
+                    [required]="isRoundtrip"
+                    [minDate]="minReturnDate"
+                    [maxDate]="maxDate"
+                    ariaLabel="Select return date"
+                    errorMessage="Please select a valid return date"
                     name="returnDate"
-                    [(ngModel)]="returnDateString"
-                    required
-                    class="w-full pl-4 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat"
-                  >
-                  <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
+                  ></app-custom-date-picker>
                 </div>
+                <!-- Return Date Validation Error -->
+                <div *ngIf="returnDateValidationError" class="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                  <div class="flex items-center">
+                    <svg class="w-4 h-4 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <p class="text-red-700 text-sm font-medium">{{ returnDateValidationError }}</p>
+                  </div>
+                </div>
+                
               </div>
 
               <!-- API Challenge Fields -->
@@ -305,24 +316,20 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
                   </div>
                   
                   <div class="form-group">
-                    <label for="arrivalTime" class="label-with-icon">
+                    <label class="label-with-icon">
                       <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
                       Arrival Time
                     </label>
                     <div class="relative">
-                      <input
-                        type="time"
-                        id="arrivalTime"
+                      <app-custom-time-picker
+                        [(ngModel)]="arrivalTime"
+                        [required]="true"
+                        ariaLabel="Select arrival time"
+                        errorMessage="Please select a valid arrival time"
                         name="arrivalTime"
-                        [(ngModel)]="apiData.arrivalTime"
-                        required
-                        class="w-full pl-4 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat"
-                      >
-                      <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
+                      ></app-custom-time-picker>
                     </div>
                   </div>
                 </div>
@@ -343,7 +350,7 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
                         [(ngModel)]="apiData.numOfGuests"
                         required
                         min="1"
-                        class="w-full pl-4 pr-12 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat"
+                        class="w-full pl-4 pr-12 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="1"
                       >
                       <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex flex-col space-y-1">
@@ -409,28 +416,6 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="form-group">
-                    <label for="returnArrivalTime" class="label-with-icon">
-                      <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                      Return Arrival Time
-                    </label>
-                    <div class="relative">
-                      <input
-                        type="time"
-                        id="returnArrivalTime"
-                        name="returnArrivalTime"
-                        [(ngModel)]="returnApiData.arrivalTime"
-                        required
-                        class="w-full pl-4 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat"
-                      >
-                      <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group">
                     <label for="returnFlightNumber" class="label-with-icon">
                       <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
@@ -446,6 +431,24 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
                       class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat"
                       placeholder="e.g., AA456"
                     >
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="label-with-icon">
+                      <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      Return Arrival Time
+                    </label>
+                    <div class="relative">
+                      <app-custom-time-picker
+                        [(ngModel)]="returnArrivalTime"
+                        [required]="isRoundtrip"
+                        ariaLabel="Select return arrival time"
+                        errorMessage="Please select a valid return arrival time"
+                        name="returnArrivalTime"
+                      ></app-custom-time-picker>
+                    </div>
                   </div>
                 </div>
                 
@@ -469,7 +472,7 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
 
               <button
                 type="submit"
-                [disabled]="!flightForm.form.valid || isSubmitting || !isFromAirportValid || !isToAirportValid || !isAirlineValid"
+                [disabled]="!flightForm.form.valid || isSubmitting || !isFromAirportValid || !isToAirportValid || !isAirlineValid || !isReturnDateValid"
                 class="btn-primary w-full"
               >
                 <span *ngIf="isSubmitting" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
@@ -585,6 +588,20 @@ export class DashboardComponent implements OnInit {
   isRoundtrip = false;
   airportValidationError = '';
   returnDateString = '';
+  
+  // New custom picker properties
+  flightDate: Date | null = null;
+  returnDate: Date | null = null;
+  arrivalTime: Date | null = null;
+  returnArrivalTime: Date | null = null;
+  
+  // Date constraints
+  minDate = new Date();
+  maxDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // One year from now
+  
+  get minReturnDate(): Date {
+    return this.flightDate || new Date();
+  }
 
   flightData = {
     from: '',
@@ -639,17 +656,20 @@ export class DashboardComponent implements OnInit {
   isFromAirportValid = true;
   isToAirportValid = true;
   isAirlineValid = true;
+  isReturnDateValid = true;
 
   // Form reset flag
   isResettingForm = false;
 
   flightDateString = '';
+  returnDateValidationError = '';
 
   constructor(
     private authService: AuthService,
     private flightService: FlightService,
     private router: Router,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -685,6 +705,15 @@ export class DashboardComponent implements OnInit {
     this.airportValidationError = '';
 
     try {
+      // Validate return date if roundtrip
+      if (this.isRoundtrip) {
+        this.validateReturnDate();
+        if (!this.isReturnDateValid) {
+          this.isSubmitting = false;
+          return;
+        }
+      }
+
       // Validate airports
       if (this.selectedFromAirport && this.selectedToAirport) {
         if (this.selectedFromAirport.code === this.selectedToAirport.code) {
@@ -704,14 +733,15 @@ export class DashboardComponent implements OnInit {
       }
 
       // Update flight data with current form values
-      this.flightData.date = new Date(this.flightDateString);
+      this.flightData.date = this.flightDate || new Date();
       this.flightData.airline = this.apiData.airline;
 
       // Prepare API payload
       const apiPayload: FlightInfoPayload = {
         ...this.apiData,
         airline: this.flightData.airline,
-        arrivalDate: this.flightDateString
+        arrivalDate: this.flightDate ? this.flightDate.toISOString().split('T')[0] : '',
+        arrivalTime: this.arrivalTime ? this.arrivalTime.toTimeString().slice(0, 5) : ''
       };
 
       // Submit to API first
@@ -731,15 +761,15 @@ export class DashboardComponent implements OnInit {
       await this.flightService.addFlight(completeFlightData);
 
       // Handle roundtrip
-      if (this.isRoundtrip && this.returnDateString) {
+      if (this.isRoundtrip && this.returnDate) {
         // Create return flight data
         const returnFlightData = {
           ...this.flightData,
           from: this.flightData.to, // Swap airports
           to: this.flightData.from,
-          date: new Date(this.returnDateString),
+          date: this.returnDate,
           flightNumber: this.returnApiData.flightNumber,
-          arrivalTime: this.returnApiData.arrivalTime,
+          arrivalTime: this.returnArrivalTime ? this.returnArrivalTime.toTimeString().slice(0, 5) : '',
           numOfGuests: this.returnApiData.numOfGuests,
           candidateName: this.candidateName,
           comments: (this.returnApiData.comments || '') + ' (Return flight)'
@@ -749,7 +779,8 @@ export class DashboardComponent implements OnInit {
         const returnApiPayload: FlightInfoPayload = {
           ...this.returnApiData,
           airline: this.flightData.airline,
-          arrivalDate: this.returnDateString,
+          arrivalDate: this.returnDate.toISOString().split('T')[0],
+          arrivalTime: this.returnArrivalTime ? this.returnArrivalTime.toTimeString().slice(0, 5) : '',
           comments: (this.returnApiData.comments || '') + ' (Return flight)'
         };
 
@@ -810,13 +841,19 @@ export class DashboardComponent implements OnInit {
 
     this.flightDateString = '';
     this.returnDateString = '';
+    this.flightDate = null;
+    this.returnDate = null;
+    this.arrivalTime = null;
+    this.returnArrivalTime = null;
     this.isRoundtrip = false;
     this.airportValidationError = '';
+    this.returnDateValidationError = '';
     
     // Reset validation flags
     this.isFromAirportValid = true;
     this.isToAirportValid = true;
     this.isAirlineValid = true;
+    this.isReturnDateValid = true;
     
     // Clear dropdown selections
     this.clearFromAirport();
@@ -860,8 +897,15 @@ export class DashboardComponent implements OnInit {
         arrivalTime: '', // Reset arrival time for return
         comments: '' // Reset comments for return
       };
+      // Validate return date when roundtrip is enabled
+      this.validateReturnDate();
+    } else {
+      // Clear return date validation when roundtrip is disabled
+      this.isReturnDateValid = true;
+      this.returnDateValidationError = '';
     }
   }
+
 
   // Search and filter methods
   filterFromAirports() {
@@ -1138,5 +1182,45 @@ export class DashboardComponent implements OnInit {
     );
     
     this.isAirlineValid = isValid || this.airlineSearchTerm === '';
+  }
+
+  // Date change handlers
+  onFlightDateChange(date: Date | null) {
+    this.flightDate = date;
+    // Validate return date when flight date changes
+    if (this.isRoundtrip) {
+      this.validateReturnDate();
+    }
+  }
+
+  onReturnDateChange(date: Date | null) {
+    this.returnDate = date;
+    // Validate return date when return date changes
+    if (this.isRoundtrip) {
+      this.validateReturnDate();
+    }
+  }
+
+  validateReturnDate() {
+    if (!this.isRoundtrip || !this.flightDate || !this.returnDate) {
+      this.isReturnDateValid = true;
+      this.returnDateValidationError = '';
+      return;
+    }
+
+    // Compare only the date parts, not the time
+    const flightDateOnly = new Date(this.flightDate.getFullYear(), this.flightDate.getMonth(), this.flightDate.getDate());
+    const returnDateOnly = new Date(this.returnDate.getFullYear(), this.returnDate.getMonth(), this.returnDate.getDate());
+    
+    if (returnDateOnly <= flightDateOnly) {
+      this.isReturnDateValid = false;
+      this.returnDateValidationError = 'Return date must be after departure date';
+    } else {
+      this.isReturnDateValid = true;
+      this.returnDateValidationError = '';
+    }
+    
+    // Trigger change detection to ensure UI updates
+    this.cdr.detectChanges();
   }
 }
