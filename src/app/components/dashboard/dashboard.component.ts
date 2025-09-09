@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -323,6 +323,10 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isFlightNumberEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., AA123"
                     >
+                    <!-- Flight number error message -->
+                    <div *ngIf="flightNumberError && (hasAttemptedSubmit || apiData.flightNumber)" class="mt-1 text-sm text-red-600" role="alert">
+                      {{ flightNumberError }}
+                    </div>
                   </div>
                   
                   <div class="form-group">
@@ -363,6 +367,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                         (input)="validateNumOfGuests()"
                         required
                         min="1"
+                        max="100"
                         [class]="'w-full pl-4 pr-12 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ' + (isNumOfGuestsEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                         placeholder="1"
                       >
@@ -378,6 +383,10 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                           </svg>
                         </button>
                       </div>
+                    </div>
+                    <!-- Number of guests error message -->
+                    <div *ngIf="numOfGuestsError && (hasAttemptedSubmit || apiData.numOfGuests)" class="mt-1 text-sm text-red-600" role="alert">
+                      {{ numOfGuestsError }}
                     </div>
                   </div>
                   
@@ -451,6 +460,10 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat ' + (isReturnFlightNumberEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
                       placeholder="e.g., AA456"
                     >
+                    <!-- Return flight number error message -->
+                    <div *ngIf="returnFlightNumberError && (hasAttemptedSubmit || returnApiData.flightNumber)" class="mt-1 text-sm text-red-600" role="alert">
+                      {{ returnFlightNumberError }}
+                    </div>
                   </div>
                   
                   <div class="form-group">
@@ -600,7 +613,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
     </div>
   `
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   userName = '';
   userFirstName = '';
   userLastName = '';
@@ -690,6 +703,16 @@ export class DashboardComponent implements OnInit {
   isCommentsValid = true;
   isReturnCommentsValid = true;
 
+  // Flight number error messages
+  flightNumberError = '';
+  returnFlightNumberError = '';
+
+  // Guest validation error message
+  numOfGuestsError = '';
+
+  // Debounced save timer
+  private saveTimeout: any = null;
+
   // Styling flags - for red borders when empty
   isFromAirportEmpty = false;
   isToAirportEmpty = false;
@@ -750,6 +773,9 @@ export class DashboardComponent implements OnInit {
 
     // Handle autofill detection
     this.setupAutofillDetection();
+    
+    // Load persisted form data
+    this.loadFormData();
   }
 
   setupAutofillDetection() {
@@ -1037,12 +1063,15 @@ export class DashboardComponent implements OnInit {
   }
 
   incrementGuests() {
-    this.apiData.numOfGuests = (this.apiData.numOfGuests || 1) + 1;
-    // Update return flight guests if roundtrip is enabled
-    if (this.isRoundtrip) {
-      this.returnApiData.numOfGuests = this.apiData.numOfGuests;
+    const currentGuests = this.apiData.numOfGuests || 1;
+    if (currentGuests < 100) {
+      this.apiData.numOfGuests = currentGuests + 1;
+      // Update return flight guests if roundtrip is enabled
+      if (this.isRoundtrip) {
+        this.returnApiData.numOfGuests = this.apiData.numOfGuests;
+      }
+      this.validateNumOfGuests();
     }
-    this.validateNumOfGuests();
   }
 
   decrementGuests() {
@@ -1097,6 +1126,8 @@ export class DashboardComponent implements OnInit {
       this.isReturnArrivalTimeEmpty = false;
       this.isReturnFlightNumberEmpty = false;
     }
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
 
@@ -1170,6 +1201,8 @@ export class DashboardComponent implements OnInit {
     this.validateFromAirport(); // Validate after selection
     // Re-filter the arrival airports to exclude the selected departure
     this.filterToAirports();
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   selectToAirport(airport: Airport) {
@@ -1182,6 +1215,8 @@ export class DashboardComponent implements OnInit {
     this.validateToAirport(); // Validate after selection
     // Re-filter the departure airports to exclude the selected arrival
     this.filterFromAirports();
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   selectAirline(airline: Airline) {
@@ -1192,6 +1227,8 @@ export class DashboardComponent implements OnInit {
     this.filteredAirlines = [];
     this.showAirlineDropdown = false;
     this.validateAirline(); // Validate after selection
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   clearFromAirport() {
@@ -1419,6 +1456,7 @@ export class DashboardComponent implements OnInit {
     
     if (this.isFlightNumberEmpty) {
       this.isFlightNumberValid = false;
+      this.flightNumberError = '';
       return;
     }
 
@@ -1433,7 +1471,22 @@ export class DashboardComponent implements OnInit {
     const isValidLength = flightNumber.length >= 3 && flightNumber.length <= 6;
     const isValidFormat = flightNumberPattern.test(flightNumber);
     
+    // Set specific error messages
+    if (!isValidLength) {
+      if (flightNumber.length < 3) {
+        this.flightNumberError = 'Too short (min 3 characters)';
+      } else {
+        this.flightNumberError = 'Too long (max 6 characters)';
+      }
+    } else if (!isValidFormat) {
+      this.flightNumberError = 'Format: 1-3 letters + 1-4 digits (e.g., AA123)';
+    } else {
+      this.flightNumberError = '';
+    }
+    
     this.isFlightNumberValid = isValidLength && isValidFormat;
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   validateArrivalTime() {
@@ -1441,12 +1494,15 @@ export class DashboardComponent implements OnInit {
     this.isArrivalTimeEmpty = this.arrivalTime === null;
     // Check if arrival time is not null and is a valid Date object
     this.isArrivalTimeValid = this.arrivalTime !== null && this.arrivalTime instanceof Date;
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   validateReturnFlightNumber() {
     if (!this.isRoundtrip) {
       this.isReturnFlightNumberValid = true;
       this.isReturnFlightNumberEmpty = false;
+      this.returnFlightNumberError = '';
       return;
     }
     
@@ -1454,6 +1510,7 @@ export class DashboardComponent implements OnInit {
     
     if (this.isReturnFlightNumberEmpty) {
       this.isReturnFlightNumberValid = false;
+      this.returnFlightNumberError = '';
       return;
     }
 
@@ -1467,7 +1524,22 @@ export class DashboardComponent implements OnInit {
     const isValidLength = flightNumber.length >= 3 && flightNumber.length <= 6;
     const isValidFormat = flightNumberPattern.test(flightNumber);
     
+    // Set specific error messages
+    if (!isValidLength) {
+      if (flightNumber.length < 3) {
+        this.returnFlightNumberError = 'Too short (min 3 characters)';
+      } else {
+        this.returnFlightNumberError = 'Too long (max 6 characters)';
+      }
+    } else if (!isValidFormat) {
+      this.returnFlightNumberError = 'Format: 1-3 letters + 1-4 digits (e.g., AA123)';
+    } else {
+      this.returnFlightNumberError = '';
+    }
+    
     this.isReturnFlightNumberValid = isValidLength && isValidFormat;
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   validateReturnArrivalTime() {
@@ -1480,35 +1552,65 @@ export class DashboardComponent implements OnInit {
     this.isReturnArrivalTimeEmpty = this.returnArrivalTime === null;
     // Check if return arrival time is not null and is a valid Date object
     this.isReturnArrivalTimeValid = this.returnArrivalTime !== null && this.returnArrivalTime instanceof Date;
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   validateCandidateName() {
     this.isCandidateNameEmpty = !this.candidateName || this.candidateName.trim() === '';
     this.isCandidateNameValid = !this.isCandidateNameEmpty;
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   validateNumOfGuests() {
     // Check if empty for styling
     this.isNumOfGuestsEmpty = !this.apiData.numOfGuests || this.apiData.numOfGuests <= 0;
-    // Ensure number of guests is a positive integer
-    this.isNumOfGuestsValid = !!(this.apiData.numOfGuests && 
-                                 this.apiData.numOfGuests > 0 && 
-                                 Number.isInteger(this.apiData.numOfGuests));
+    
+    if (this.isNumOfGuestsEmpty) {
+      this.isNumOfGuestsValid = false;
+      this.numOfGuestsError = '';
+      return;
+    }
+
+    // Validate guest count constraints
+    const guestCount = this.apiData.numOfGuests;
+    const isValidInteger = Number.isInteger(guestCount);
+    const isValidRange = guestCount > 0 && guestCount <= 100;
+    
+    // Set specific error messages
+    if (!isValidInteger) {
+      this.numOfGuestsError = 'Must be a whole number';
+    } else if (guestCount <= 0) {
+      this.numOfGuestsError = 'Must be at least 1 guest';
+    } else if (guestCount > 100) {
+      this.numOfGuestsError = 'Maximum 100 guests allowed';
+    } else {
+      this.numOfGuestsError = '';
+    }
+    
+    this.isNumOfGuestsValid = isValidInteger && isValidRange;
     
     // Update return flight guests if roundtrip is enabled
     if (this.isRoundtrip) {
       this.returnApiData.numOfGuests = this.apiData.numOfGuests;
     }
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   validateComments() {
     // Comments are optional and can be empty
     this.isCommentsValid = true;
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   validateReturnComments() {
     // Return comments are optional and can be empty
     this.isReturnCommentsValid = true;
+    // Save form data with debounce
+    this.debouncedSave();
   }
 
   // Validate all fields
@@ -1573,6 +1675,10 @@ export class DashboardComponent implements OnInit {
     if (this.isRoundtrip) {
       this.validateReturnDate();
     }
+    // Save form data only if user is actually changing the date
+    if (date !== null) {
+      this.saveFormData();
+    }
   }
 
   onReturnDateChange(date: Date | null) {
@@ -1581,6 +1687,10 @@ export class DashboardComponent implements OnInit {
     // Validate return date when return date changes
     if (this.isRoundtrip) {
       this.validateReturnDate();
+    }
+    // Save form data only if user is actually changing the date
+    if (date !== null) {
+      this.saveFormData();
     }
   }
 
@@ -1595,9 +1705,9 @@ export class DashboardComponent implements OnInit {
     const flightDateOnly = new Date(this.flightDate.getFullYear(), this.flightDate.getMonth(), this.flightDate.getDate());
     const returnDateOnly = new Date(this.returnDate.getFullYear(), this.returnDate.getMonth(), this.returnDate.getDate());
     
-    if (returnDateOnly <= flightDateOnly) {
+    if (returnDateOnly < flightDateOnly) {
       this.isReturnDateValid = false;
-      this.returnDateValidationError = 'Return date must be after departure date';
+      this.returnDateValidationError = 'Return date cannot be before departure date';
     } else {
       this.isReturnDateValid = true;
       this.returnDateValidationError = '';
@@ -1606,4 +1716,143 @@ export class DashboardComponent implements OnInit {
     // Trigger change detection to ensure UI updates
     this.cdr.detectChanges();
   }
+
+  // Data persistence methods
+  debouncedSave() {
+    // Clear existing timeout
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+    // Set new timeout to save after 500ms of inactivity
+    this.saveTimeout = setTimeout(() => {
+      this.saveFormData();
+    }, 500);
+  }
+
+  saveFormData() {
+    const formData = {
+      // Basic form data
+      flightDate: this.flightDate,
+      returnDate: this.returnDate,
+      arrivalTime: this.arrivalTime,
+      returnArrivalTime: this.returnArrivalTime,
+      candidateName: this.candidateName,
+      isRoundtrip: this.isRoundtrip,
+      
+      // Search terms
+      fromSearchTerm: this.fromSearchTerm,
+      toSearchTerm: this.toSearchTerm,
+      airlineSearchTerm: this.airlineSearchTerm,
+      
+      // Selected items
+      selectedFromAirport: this.selectedFromAirport,
+      selectedToAirport: this.selectedToAirport,
+      selectedAirline: this.selectedAirline,
+      
+      // API data
+      apiData: this.apiData,
+      returnApiData: this.returnApiData,
+      
+      // Flight data
+      flightData: this.flightData,
+      
+      // Validation states
+      hasAttemptedSubmit: this.hasAttemptedSubmit
+    };
+    
+    try {
+      localStorage.setItem('skylog-form-data', JSON.stringify(formData));
+    } catch (error) {
+      console.warn('Could not save form data to localStorage:', error);
+    }
+  }
+
+  loadFormData() {
+    try {
+      const savedData = localStorage.getItem('skylog-form-data');
+      if (savedData) {
+        const formData = JSON.parse(savedData);
+        
+        // Restore basic form data
+        this.flightDate = formData.flightDate ? new Date(formData.flightDate) : null;
+        this.returnDate = formData.returnDate ? new Date(formData.returnDate) : null;
+        this.arrivalTime = formData.arrivalTime ? new Date(formData.arrivalTime) : null;
+        this.returnArrivalTime = formData.returnArrivalTime ? new Date(formData.returnArrivalTime) : null;
+        this.candidateName = formData.candidateName || '';
+        this.isRoundtrip = formData.isRoundtrip || false;
+        
+        // Restore search terms
+        this.fromSearchTerm = formData.fromSearchTerm || '';
+        this.toSearchTerm = formData.toSearchTerm || '';
+        this.airlineSearchTerm = formData.airlineSearchTerm || '';
+        
+        // Restore selected items
+        this.selectedFromAirport = formData.selectedFromAirport || null;
+        this.selectedToAirport = formData.selectedToAirport || null;
+        this.selectedAirline = formData.selectedAirline || null;
+        
+        // Restore API data
+        this.apiData = formData.apiData || {
+          airline: '',
+          arrivalDate: '',
+          arrivalTime: '',
+          flightNumber: '',
+          numOfGuests: 1,
+          comments: ''
+        };
+        this.returnApiData = formData.returnApiData || {
+          airline: '',
+          arrivalDate: '',
+          arrivalTime: '',
+          flightNumber: '',
+          numOfGuests: 1,
+          comments: ''
+        };
+        
+        // Restore flight data
+        this.flightData = formData.flightData || {
+          from: '',
+          to: '',
+          airline: '',
+          date: null
+        };
+        
+        // Restore validation state
+        this.hasAttemptedSubmit = formData.hasAttemptedSubmit || false;
+        
+        // Update empty states
+        this.isFromAirportEmpty = !this.fromSearchTerm;
+        this.isToAirportEmpty = !this.toSearchTerm;
+        this.isAirlineEmpty = !this.airlineSearchTerm;
+        this.isFlightNumberEmpty = !this.apiData.flightNumber;
+        this.isReturnFlightNumberEmpty = !this.returnApiData.flightNumber;
+        this.isNumOfGuestsEmpty = !this.apiData.numOfGuests || this.apiData.numOfGuests <= 0;
+        this.isCandidateNameEmpty = !this.candidateName;
+        this.isReturnDateEmpty = this.isRoundtrip && !this.returnDate;
+        this.isArrivalTimeEmpty = !this.arrivalTime;
+        this.isReturnArrivalTimeEmpty = this.isRoundtrip && !this.returnArrivalTime;
+        
+        // Validate all fields after loading
+        this.validateAllFields();
+      }
+    } catch (error) {
+      console.warn('Could not load form data from localStorage:', error);
+    }
+  }
+
+  clearFormData() {
+    try {
+      localStorage.removeItem('skylog-form-data');
+    } catch (error) {
+      console.warn('Could not clear form data from localStorage:', error);
+    }
+  }
+
+  ngOnDestroy() {
+    // Clear any pending save timeout
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+  }
+
 }
