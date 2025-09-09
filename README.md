@@ -8,9 +8,15 @@ A modern flight tracking web application built with Angular 17 and Firebase, fea
 - **Advanced Flight Logging**: Log flights with comprehensive details including roundtrip support
 - **Custom Date & Time Pickers**: Beautiful, accessible custom date and time selection components with modal interfaces
 - **Real-time Updates**: Flight history updates in real-time using Firestore
+- **Flight History Display**: Shows total count of logged flights with real-time updates
 - **API Integration**: Submits flight data to external API challenge endpoint
 - **Smart Airport/Airline Selection**: Auto-complete dropdowns with US airports and airlines
-- **Roundtrip Support**: Log both outbound and return flights in one form
+- **Data Persistence**: Form data automatically saves and restores on page refresh using localStorage
+- **Smart Persistence Management**: Automatically clears all user data on logout for security
+- **Form Validation**: Comprehensive validation with real-time error messages and constraints
+- **Flight Number Validation**: Smart validation for flight numbers (1-3 letters + 1-4 digits)
+- **Guest Count Limits**: Configurable guest count with validation (1-100 guests)
+- **Autofill Detection**: Handles browser autofill to prevent data loss
 - **Responsive Design**: Beautiful travel-booking inspired UI with TailwindCSS
 - **Protected Routes**: Secure routing with authentication guards
 
@@ -59,7 +65,35 @@ src/
 npm install
 ```
 
-### 2. Environment Configuration
+### 2. Tailwind CSS Configuration
+
+The project uses Tailwind CSS with custom configuration. Ensure these files exist:
+
+**`tailwind.config.js`:**
+```javascript
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{html,ts}",
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        'montserrat': ['Montserrat', 'sans-serif'],
+      },
+      colors: {
+        primary: '#38BDF8', // Sky Blue
+        secondary: '#6366F1', // Indigo
+        accent: '#FB7185', // Coral
+        background: '#F9FAFB', // Light Gray
+      }
+    },
+  },
+  plugins: [],
+}
+```
+
+### 3. Environment Configuration
 
 The application uses Angular environment files for configuration. Update the following files:
 
@@ -104,13 +138,13 @@ export const environment = {
 };
 ```
 
-### 3. Deploy Firestore Rules
+### 4. Deploy Firestore Rules
 
 ```bash
 firebase deploy --only firestore:rules
 ```
 
-### 3. Run Development Server
+### 5. Run Development Server
 
 ```bash
 npm start
@@ -152,15 +186,14 @@ Navigate to `http://localhost:3000`
   airline: string,      // Airline name
   createdAt: Date,      // Log creation timestamp
   // API Challenge fields
-  flightNumber?: string,    // Flight number (e.g., "AA123")
+  flightNumber?: string,    // Flight number (e.g., "AA123") - validated format
   arrivalTime?: string,     // Arrival time (e.g., "14:30")
-  numOfGuests?: number,     // Number of guests
+  numOfGuests?: number,     // Number of guests (1-100)
   candidateName?: string,   // Candidate name for API
   comments?: string         // Additional comments
 }
 ```
-
-## Security Rules
+### Security Rules
 
 The Firestore security rules ensure:
 - Users can create their own user document (for signup)
@@ -168,6 +201,28 @@ The Firestore security rules ensure:
 - Users can only read/write their own flight documents
 - All operations require authentication
 - Public user creation allows for seamless signup flow
+## **Validation Rules:**
+- **Flight Numbers**: 1-3 letters followed by 1-4 digits (e.g., "AA123", "BA1234")
+- **Guest Count**: Must be between 1 and 100 guests
+- **Return Date**: Can be same day or after departure date
+- **Required Fields**: All fields except comments are required for submission
+
+
+
+
+## **User Experience:**
+- ✅ **No data loss** - Refresh the page, keep your progress
+- ✅ **Seamless workflow** - Continue where you left off
+- ✅ **Cross-session persistence** - Data survives browser restarts
+- ✅ **Automatic cleanup** - Saved data is cleared after successful submission
+- ✅ **Security focused** - All data is cleared on logout for privacy
+
+## **Security & Privacy:**
+- **Logout Clearing**: All localStorage data is automatically cleared when users log out
+- **Data Isolation**: Prevents data leakage between different users on the same device
+- **Clean Sessions**: Each new login starts with a fresh, clean form state
+- **Magic Link Cleanup**: Temporary authentication data is cleared on logout
+
 
 ## API Integration
 
