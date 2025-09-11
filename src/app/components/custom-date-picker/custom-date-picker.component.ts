@@ -25,7 +25,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
         [attr.aria-expanded]="isOpen"
         [attr.aria-haspopup]="'dialog'"
         [name]="name"
-        placeholder="Dec 25, 2024"
+        placeholder="Select a date"
         readonly
       />
     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

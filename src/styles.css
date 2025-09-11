@@ -23,6 +23,19 @@ input, textarea, select {
   font-family: 'Montserrat', sans-serif;
 }
 
+/* Lighter placeholder text to avoid confusion with pre-filled data */
+input::placeholder, textarea::placeholder {
+  color: #9CA3AF !important; /* Lighter gray */
+  font-style: italic;
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Even lighter when focused to make it clear it's placeholder */
+input:focus::placeholder, textarea:focus::placeholder {
+  opacity: 0.5;
+}
+
 .card {
   @apply bg-white rounded-2xl shadow-lg p-4 transition-all duration-300 backdrop-blur-sm border border-gray-100;
 }

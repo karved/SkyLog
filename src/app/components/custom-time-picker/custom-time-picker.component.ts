@@ -25,7 +25,7 @@ import { format, setHours, setMinutes, addHours, subHours, addMinutes, subMinute
         [attr.aria-expanded]="isOpen"
         [attr.aria-haspopup]="'dialog'"
         [name]="name"
-        placeholder="2:30 PM"
+        placeholder="Select a time"
         readonly
       />
     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

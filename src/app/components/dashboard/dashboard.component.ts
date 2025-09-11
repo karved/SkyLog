@@ -85,7 +85,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       required
                       autocomplete="off"
                       [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isFromAirportEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
-                      placeholder="e.g., LAX - Los Angeles"
+                      placeholder="Search departure airport"
                     >
                     <button
                       type="button"
@@ -138,7 +138,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       required
                       autocomplete="off"
                       [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isToAirportEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
-                      placeholder="e.g., JFK - New York"
+                      placeholder="Search arrival airport"
                     >
                     <button
                       type="button"
@@ -203,7 +203,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       required
                       autocomplete="off"
                       [class]="'w-full pl-4 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isAirlineEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
-                      placeholder="e.g., American Airlines"
+                      placeholder="Search airline"
                     >
                     <button
                       type="button"
@@ -321,7 +321,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       pattern="[A-Za-z]{1,3}[0-9]{1,4}"
                       title="Flight number must be 3-6 characters: 1-3 letters followed by 1-4 digits (e.g., AA123, BA1234)"
                       [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isFlightNumberEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
-                      placeholder="e.g., AA123"
+                      placeholder="Enter flight number"
                     >
                     <!-- Flight number error message -->
                     <div *ngIf="flightNumberError && (hasAttemptedSubmit || apiData.flightNumber)" class="mt-1 text-sm text-red-600" role="alert">
@@ -369,7 +369,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                         min="1"
                         max="100"
                         [class]="'w-full pl-4 pr-12 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ' + (isNumOfGuestsEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
-                        placeholder="1"
+                        placeholder="Number of guests"
                       >
                       <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex flex-col space-y-1">
                         <button type="button" (click)="incrementGuests()" class="text-gray-400 hover:text-gray-600 transition-colors">
@@ -405,7 +405,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       (input)="validateCandidateName()"
                       required
                       [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 text-sm font-montserrat ' + (isCandidateNameEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
-                      placeholder="Your full name"
+                      placeholder="Enter your full name"
                     >
                   </div>
                 </div>
@@ -458,7 +458,7 @@ import { CustomTimePickerComponent } from '../custom-time-picker/custom-time-pic
                       pattern="[A-Za-z]{1,3}[0-9]{1,4}"
                       title="Flight number must be 3-6 characters: 1-3 letters followed by 1-4 digits (e.g., AA123, BA1234)"
                       [class]="'w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-sm font-montserrat ' + (isReturnFlightNumberEmpty && hasAttemptedSubmit ? 'border-red-300 bg-red-50' : 'border-gray-200')"
-                      placeholder="e.g., AA456"
+                      placeholder="Enter return flight number"
                     >
                     <!-- Return flight number error message -->
                     <div *ngIf="returnFlightNumberError && (hasAttemptedSubmit || returnApiData.flightNumber)" class="mt-1 text-sm text-red-600" role="alert">
